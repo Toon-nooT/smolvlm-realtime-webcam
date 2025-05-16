@@ -88,6 +88,7 @@
         <div>
             <label for="responseText">Response:</label><br>
             <textarea id="responseText" style="height: 2em; width: 40em" name="Response" readonly placeholder="Server response will appear here..."></textarea>
+            <div id="responseTime" style="font-size: small;"></div>
         </div>
     </div>
 
@@ -101,6 +102,7 @@
         const baseURL = document.getElementById('baseURL');
         const instructionText = document.getElementById('instructionText');
         const responseText = document.getElementById('responseText');
+        const responseTimeElement = document.getElementById('responseTime');
         const startButton = document.getElementById('startButton');
 
         instructionText.value = "What do you see?"; // default instruction
@@ -167,6 +169,8 @@
             const instruction = instructionText.value;
             const imageBase64URL = captureImage();
 
+            const startTime = performance.now();
+
             if (!imageBase64URL) {
                 responseText.value = "Failed to capture image. Stream might not be active.";
                 // Optionally stop processing if image capture fails consistently
@@ -182,9 +186,15 @@
             try {
                 const response = await sendChatCompletionRequest(payload.instruction, payload.imageBase64URL);
                 responseText.value = response;
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                responseTimeElement.textContent = ` Response time: ${duration.toFixed(2)} ms`;
             } catch (error) {
                 console.error('Error sending data:', error);
                 responseText.value = `Error: ${error.message}`;
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                responseTimeElement.textContent = ` Request failed after: ${duration.toFixed(2)} ms`;
             } finally {
                 // Schedule the next request if still processing
                 if (isProcessing) {
