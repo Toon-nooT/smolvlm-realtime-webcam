@@ -12,7 +12,7 @@
             align-items: center;
             gap: 20px;
             padding: 20px;
-            background-color: #f0f0f0;
+            background-color: #c8f5b4; /* Default background color */
         }
         .controls, .io-areas {
             display: flex;
@@ -41,6 +41,11 @@
             border: 2px solid #333;
             background-color: #000;
             border-radius: 8px;
+        }
+        .video-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         #startButton {
             padding: 10px 20px;
@@ -71,14 +76,19 @@
 </head>
 <body>
 
-    <h1>Camera Interaction App</h1>
+    <h1>sleep alarm</h1>
+    <h3>real-time webcam demo built with a locally<br>running vision model SmolVLM and llama.cpp</h3>
+    
 
-    <video id="videoFeed" autoplay playsinline></video>
+
+    <div class="video-container">
+        <video id="videoFeed" autoplay playsinline></video>
+    </div>
     <canvas id="canvas" class="hidden"></canvas> <!-- For capturing frames -->
 
     <div class="io-areas">
-        <div>
-            <label for="baseURL">Base API:</label><br>
+        <div class="hidden">
+            <label for="baseURL">Running ggml-org/SmolVLM-500M-Instruct-GGUF locally on:</label><br>
             <input id="baseURL" name="Instruction" value="http://localhost:8080"></textarea>
         </div>
         <div>
@@ -96,6 +106,8 @@
         <button id="startButton" class="start">Start</button>
     </div>
 
+    <audio id="sirenSound" src="siren.wav" preload="auto"></audio>
+
     <script>
         const video = document.getElementById('videoFeed');
         const canvas = document.getElementById('canvas');
@@ -104,12 +116,14 @@
         const responseText = document.getElementById('responseText');
         const responseTimeElement = document.getElementById('responseTime');
         const startButton = document.getElementById('startButton');
+        const sirenSound = document.getElementById('sirenSound');
 
-        instructionText.value = "What do you see?"; // default instruction
+        instructionText.value = "Is the person asleep? Answer only: yes, maybe or no"; // default instruction
 
         let stream;
         let intervalId;
         let isProcessing = false;
+        let sleepCounter = 0; // Counter for consecutive 'is sleeping' responses
 
         // Returns response text (string)
         async function sendChatCompletionRequest(instruction, imageBase64URL) {
@@ -141,7 +155,7 @@
         // 1. Ask for camera permission on load
         async function initCamera() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 }, audio: false });
                 video.srcObject = stream;
                 responseText.value = "Camera access granted. Ready to start.";
             } catch (err) {
@@ -184,8 +198,29 @@
             };
 
             try {
-                const response = await sendChatCompletionRequest(payload.instruction, payload.imageBase64URL);
+                let response = await sendChatCompletionRequest(payload.instruction, payload.imageBase64URL);
+                
                 responseText.value = response;
+
+                if (response.toLowerCase().includes('yes')) {
+                    // response = "Yes";
+                    sleepCounter++; // Increment counter if 'is sleeping' is detected
+                    if (sleepCounter > 1) { // Only trigger alarm after 2 consecutive detections
+                        sirenSound.play();
+                        document.body.style.backgroundImage = "url('alarm.webp')";
+                        document.body.style.backgroundRepeat = 'repeat';
+                        
+                    }
+                } else {
+                    // response = "No";
+                    sleepCounter = 0; // Reset counter if 'is sleeping' is not detected
+                    document.body.style.backgroundImage = 'none';
+                    document.body.style.backgroundColor = '#c8f5b4';
+                    sirenSound.pause();
+                    sirenSound.currentTime = 0; // Reset playback to the beginning
+                }
+                
+
                 const endTime = performance.now();
                 const duration = endTime - startTime;
                 responseTimeElement.textContent = ` Response time: ${duration.toFixed(2)} ms`;

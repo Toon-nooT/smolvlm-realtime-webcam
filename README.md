@@ -1,8 +1,9 @@
 # SmolVLM real-time camera demo
 
-![demo](./demo.png)
+![Screenshot 1](./screenshot1.jpg)
+![Screenshot 2](./screenshot2.jpg)
 
-This repository is a simple demo for how to use llama.cpp server with SmolVLM 500M to get real-time object detection
+This repository is a simple web based demo for how to use llama.cpp server with SmolVLM 500M. It can describe the scene, in this case, whether the person is asleep. Notable change from the [original repo](https://github.com/ngxson/smolvlm-realtime-webcam) is that the calls are not sent out async anymore.
 
 ## How to setup
 
@@ -16,11 +17,4 @@ This repository is a simple demo for how to use llama.cpp server with SmolVLM 50
 
 ## Performance notes
 
-Using cmd: llama-server -m SmolVLM-500M-Instruct-Q8_0.gguf --mmproj mmproj-SmolVLM-500M-Instruct-Q8_0.gguf
-
-`-ngl 99` didn't change much on my 3 yo laptop
-
-Smaller quant SmolVLM-500M-Instruct.Q4_K_M didn't change much in processing time, but this due to using the same mmproj file
-
-Using cmd: llama-server -m SmolVLM-500M-Instruct-f16.gguf --mmproj mmproj-SmolVLM-500M-Instruct-f16.gguf is only 10% slower
-
+I used llama-b5415-bin-win-vulkan-x64 on my igp of AMD Ryzen 5 PRO 5650U and this command: llama-server -m SmolVLM2-2.2B-Instruct-Q8_0.gguf --mmproj mmproj-SmolVLM2-2.2B-Instruct-Q8_0.gguf -ngl 99
